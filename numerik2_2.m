@@ -1,3 +1,5 @@
+% Getestet und lauffähig in Octave 4.0.1
+
 1;
 function y = f(x)
   y = 1 ./ (1+25*(x.^2));

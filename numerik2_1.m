@@ -1,4 +1,6 @@
-1;  % fuck you octave
+% Getestet und lauffähig in Octave 4.0.1
+1;
+
 function [c] = myNewtonInterpol(x,f)
   n = length(x);
   y(:,1) = f; % first column equals f(x_i)

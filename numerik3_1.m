@@ -25,3 +25,5 @@ endfunction
 function y = f(x)
     y = 1/x**2;
 endfunction
+
+myQuadratur1DTest()

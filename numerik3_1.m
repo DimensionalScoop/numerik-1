@@ -3,23 +3,32 @@
 
 function c = myQuadratur1D(f,w,p)
     c = 0;
-    for i = 1:1:length(p)-1
-        a = p(i);
-        b = p(i+1);
-        weight = (w(i)+w(i+1))/2;
-        
-        c += (b-a)*(f(a)+f(b))/2 * weight;
+    for i = 1:1:length(p) 
+        feval(f,p(i))  ;
+        c += w(i)*feval(f,p(i));
     endfor
-    c /= sum(weight);
+    c *= (p(length(p)) - p(1));
 endfunction
 
 function myQuadratur1DTest()
-    disp("Expected Value:")
+    a = 0.5;
+    b = 1;
+    disp("Expected Value: ")
     1
-    disp("Calculated:")
+    disp("Calculated with n=1 (Trapezoidal rule): ")
+    w = [0.5 , 0.5];
+    p = linspace(a,b,2);
+    myQuadratur1D(@f, w, p)
     
-    steps = 1000
-    myQuadratur1D(@f, ones(steps+1,1),0.5:0.5/steps:1)
+    disp("Calculated with n=2 (Simpson rule): ")
+    w = [1/6 , 2/3 , 1/6];
+    p = linspace(a,b,3);
+    myQuadratur1D(@f, w, p)
+    
+    disp("Calculated with n=3 (3/8 rule): ")
+    w = [1/8 , 3/8 , 3/8 , 1/8];
+    p = linspace(a,b,4);
+    myQuadratur1D(@f, w, p)
 endfunction
 
 function y = f(x)

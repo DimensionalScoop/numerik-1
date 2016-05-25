@@ -1,0 +1,1 @@
+myQuadraturSum1DTest();

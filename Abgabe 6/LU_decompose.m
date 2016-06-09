@@ -1,4 +1,5 @@
 % Tested and executable in Octave 4.0.2
+
 function LU = LU_decompose(A)
 	% we assume that A is regular
 	[n,n] = size(A);

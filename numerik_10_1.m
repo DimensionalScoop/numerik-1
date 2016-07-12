@@ -1,7 +1,7 @@
 1;
 function d = relative_defect(A,x,b);
 % octave's norm function does what we want: euclidian norm
-  d = norm(A*x+b);
+  d = norm(A*x-b);
 endfunction
 
 function [x, numit] = my_jacobi(A,b,x0,eps,maxit)
@@ -35,7 +35,6 @@ function [x, numit] = my_gauss_seidel(A,b,x0,eps,maxit)
   inv_D_and_L = inverse(D+L);
   c = inv_D_and_L * b;
   H_1 = -inv_D_and_L*R;
-  eigs(H_1)
   
   % Initialization
   rel_def_in = relative_defect(A,x0,b);
@@ -51,31 +50,57 @@ function [x, numit] = my_gauss_seidel(A,b,x0,eps,maxit)
   endwhile
 endfunction
 
-function [x, numit] = test_jacobi(A,b,x0,eps,maxit)
-  x = x0;
-  x_old=x0;
-  numit = 0;
+function [x, numit] = my_sor(A,b,x0,eps,maxit,omega)
+  % Matrix calculations
+  R = triu(A,1);
+  L = tril(A,-1);
+  D = diag(diag(A));
+  inv_D_and_omega_L = inverse(D+omega*L);
+  c = omega * inv_D_and_omega_L * b;
+  H_w = inv_D_and_omega_L * ((1-omega) * D - omega * R);
+  
+  % Initialization
   rel_def_in = relative_defect(A,x0,b);
   err = rel_def_in + 1; % arbitrary default error greater than first one.
-  k = 0;
-  n = length(A);
+  numit = 0;
+  x = x0;
+
+  % Iteration
   while ((numit < maxit) && (err > eps*rel_def_in))
-    for i=1:n
-      sigma = 0;
-      for j=1:n
-        if (i!=j)
-          sigma = sigma + A(i,j)*x_old(j);
-        endif
-      endfor
-      x(i) = (b(i)-sigma)/A(i,i);
-    endfor
+    x = H_w*x + c;
     err = relative_defect(A,x,b);
-    k = k+1;
-    x_old = x
+    numit = numit + 1;
   endwhile
 endfunction
 
-b=[1;2;3;4];
-x0 = [0;0;0;0];
-A=[2,0,3,4;3,4,1,2;1,4,2,3;1,2,3,4];
-my_gauss_seidel(A,b,x0,1e-4,1e1)
+
+function [A,b] = my_test_system(n)
+  b = ones(n*n,1);
+  % fill up A's diagonal with many T's
+  A = 4*eye(n*n) + diag(-ones(n*n-1,1),1) + diag(-ones(n*n-1,1),-1);
+  % now fill up with I's
+  A = A + diag(-ones(n*n-n,1),n) + diag(-ones(n*n-n,1),-n);
+endfunction
+
+n_max = 60;
+iterations_gs = zeros(n_max-9,1);
+iterations_jac = zeros(n_max-9,1);
+iterations_sor = zeros(n_max-9,1);
+
+for n=10:n_max
+  [A,b] = my_test_system(n);
+  [x,iterations_jac(n-9)] = my_jacobi(A,b,b,1e-6,1e8);
+  [x, iterations_gs(n-9)] = my_gauss_seidel(A,b,b,1e-6,1e8);
+  omega = 2/(sin(pi/n)+1);
+  [x, iterations_sor(n-9)] = my_sor(A,b,b,1e-6,1e8, omega);
+  printf([int2str(n) '\n']);
+  fflush(stdout);
+endfor
+
+n = linspace(10,n_max,n_max-9)';
+plot(n,iterations_jac, 'r-', n, iterations_gs, 'b-', n, iterations_sor, 'g-');
+legend('Jacobi','Gauß-Seidel','SOR');
+xlabel('n');
+ylabel('# iterations');
+title('Plot of iterative procedures calculating A*x=b');
+print('PA10.pdf);
